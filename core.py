@@ -61,7 +61,31 @@ def merge_sort(items, key=lambda x: x):
               (when the keys are equal, take from the LEFT half -> stable)
     Target: O(n log n).
     """
-    raise NotImplementedError("Part 2: merge_sort")
+    # Base case: 0 or 1 items is already sorted (return a copy, not the original)
+    if len(items) <= 1:
+        return list(items)
+
+    # Divide and conquer: sort each half recursively
+    mid = len(items) // 2
+    left = merge_sort(items[:mid], key)
+    right = merge_sort(items[mid:], key)
+
+    # Merge: repeatedly take the smaller front item from left or right
+    result = []
+    i = j = 0
+    while i < len(left) and j < len(right):
+        # <= takes from the left half on ties, which keeps the sort stable
+        if key(left[i]) <= key(right[j]):
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
+
+    # One half is used up; the rest of the other half is already sorted
+    result.extend(left[i:])
+    result.extend(right[j:])
+    return result
 
 
 def lower_bound(sorted_items, target, key=lambda x: x):
@@ -73,7 +97,19 @@ def lower_bound(sorted_items, target, key=lambda x: x):
     Example: [1, 3, 3, 5, 9] with target 3 -> 1,  target 4 -> 3,  target 10 -> 5
     Target: O(log n).  Keep two pointers lo, hi and halve the range each step.
     """
-    raise NotImplementedError("Part 2: lower_bound")
+    # Search range is [lo, hi); hi starts at len because the answer can be past the end
+    lo = 0
+    hi = len(sorted_items)
+
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if key(sorted_items[mid]) < target:
+            lo = mid + 1  # mid and everything before it are too small
+        else:
+            hi = mid  # mid could be the first match, so keep it in range
+
+    # lo == hi: the first index whose key is >= target
+    return lo
 
 
 # =====================================================================
@@ -90,8 +126,8 @@ class MinHeap:
     """
 
     def __init__(self):
-        self._a = []          # the heap array
-        self._count = 0       # insertion counter for tie-breaking
+        self._a = []  # the heap array
+        self._count = 0  # insertion counter for tie-breaking
 
     def __len__(self):
         return len(self._a)
