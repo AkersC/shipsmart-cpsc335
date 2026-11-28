@@ -209,7 +209,19 @@ def greedy_select(items, capacity):
     Return (chosen_ids, total_value, total_weight), chosen_ids in the order taken.
     Target: O(n log n).
     """
-    raise NotImplementedError("Part 4: greedy_select")
+    ordered = merge_sort(items, key=lambda it: -(it["value"] / it["weight"]))
+
+    chosen = []
+    total_value = 0
+    total_weight = 0
+
+    for it in ordered:
+        if total_weight + it["weight"] <= capacity:
+            chosen.append(it["id"])
+            total_value += it["value"]
+            total_weight += it["weight"]
+
+    return (chosen, total_value, total_weight)
 
 
 # =====================================================================
@@ -227,7 +239,30 @@ def dp_select(items, capacity):
     Return (chosen_ids, total_value, total_weight). chosen_ids in the same order
     as the items list. Target: O(n * capacity) time.
     """
-    raise NotImplementedError("Part 5: dp_select")
+    n = len(items)
+
+    best = [[0] * (capacity + 1) for _ in range(n + 1)]
+    for i in range (1, n + 1):
+        w = items[i - 1]["weight"]
+        v = items[i - 1]["value"]
+
+        for c in range (capacity + 1):
+            best[i][c] = best[i - 1][c]
+            if w <= c and best[i - 1][c - w] + v > best[i][c]:
+                best[i][c] = best[i - 1][c - w] + v
+
+
+    taken = []
+    c = capacity
+    for i in range(n, 0, -1):
+        if best[i][c] != best[i - 1][c]:
+            taken.append(items[i - 1])
+            c -= items[i - 1]["weight"]
+    taken.reverse()
+
+    chosen_ids = [it["id"] for it in taken]
+    total_weight = sum(it["weight"] for it in taken)
+    return (chosen_ids, best[n][capacity], total_weight)
 
 
 # =====================================================================
@@ -243,7 +278,18 @@ def bfs_reachable(graph, start, blocked_edge=None):
     Return a dict  node -> number of hops from start  for every reachable node
     (start itself has 0). Use collections.deque as the queue. Target: O(V + E).
     """
-    raise NotImplementedError("Part 6: bfs_reachable")
+    hops = {start: 0}
+    queue = deque([start])
+    while queue:
+        u = queue.popleft()
+        for v, _ in graph.get(u, []):
+
+            if blocked_edge == (u, v) or blocked_edge == (v, u):
+                continue
+            if v not in hops:
+                hops[v] = hops[u] + 1
+                queue.append(v)
+    return hops
 
 
 def dijkstra(graph, start):
@@ -254,7 +300,20 @@ def dijkstra(graph, start):
       prev[node] : the node just before it on that path (prev[start] = None)
     Only reachable nodes appear in dist and prev. Target: O((V + E) log V).
     """
-    raise NotImplementedError("Part 6: dijkstra")
+    dist = {start: 0}
+    prev = {start: None}
+    heap = MinHeap()
+    heap.push(0, start)
+    while len (heap) > 0:
+        d, u = heap.pop()
+        if d > dist[u]:
+            continue
+        for v, w in graph[u]:
+            if v not in dist or d + w < dist[v]:
+                dist[v] = d + w
+                prev[v] = u
+                heap.push(d + w, v)
+    return dist, prev
 
 
 def path_to(prev, target):
@@ -279,7 +338,24 @@ def mst_kruskal(nodes, edges):
     in different components. Return (tree_edges, total_cost), tree_edges as
     (u, v, cost) in the order added. Target: O(E log E).
     """
-    raise NotImplementedError("Part 6: mst_kruskal")
+    parent = {n: n for n in nodes}
+
+    tree = []
+    total = 0
+    for u, v, cost in merge_sort(edges, key=lambda e: e[2]):
+        ru = u
+        while parent[ru] != ru:
+            ru = parent[ru]
+        rv = v
+        while parent[rv] != rv:
+            rv = parent[rv]
+        if ru != rv:
+            parent[ru] = rv
+            tree.append((u, v, cost))
+            total += cost
+    return tree, total
+
+
 
 
 # =====================================================================
