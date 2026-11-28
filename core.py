@@ -132,20 +132,65 @@ class MinHeap:
     def __len__(self):
         return len(self._a)
 
+    def _less(self, i, j):
+        """True if entry i should come out before entry j.
+        Compares (priority, counter) only, so items themselves are never compared."""
+        return (self._a[i][0], self._a[i][1]) < (self._a[j][0], self._a[j][1])
+
     def push(self, priority, item):
         """Add an item. Append at the end, then 'bubble up'. O(log n)."""
-        raise NotImplementedError("Part 3: MinHeap.push")
+        self._a.append((priority, self._count, item))
+        self._count += 1
+
+        # Bubble up: swap with the parent while this entry is smaller
+        i = len(self._a) - 1
+        while i > 0:
+            parent = (i - 1) // 2
+            if self._less(i, parent):
+                self._a[i], self._a[parent] = self._a[parent], self._a[i]
+                i = parent
+            else:
+                break
 
     def peek(self):
         """Return (priority, item) with the smallest priority without removing it.
         Raise IndexError if the heap is empty. O(1)."""
-        raise NotImplementedError("Part 3: MinHeap.peek")
+        if len(self._a) == 0:
+            raise IndexError("peek from an empty heap")
+        priority, _, item = self._a[0]  # smallest entry is always at the top
+        return (priority, item)
 
     def pop(self):
         """Remove and return (priority, item) with the smallest priority.
         Move the last entry to the top, then 'bubble down'.
         Raise IndexError if the heap is empty. O(log n)."""
-        raise NotImplementedError("Part 3: MinHeap.pop")
+        if len(self._a) == 0:
+            raise IndexError("pop from an empty heap")
+
+        top = self._a[0]
+        last = self._a.pop()  # remove the last entry (cheap end of the list)
+
+        # If anything is left, move the last entry to the top and bubble it down
+        if len(self._a) > 0:
+            self._a[0] = last
+            i = 0
+            n = len(self._a)
+            while True:
+                left = 2 * i + 1
+                right = 2 * i + 2
+                smallest = i
+                # Find the smallest of this entry and its children
+                if left < n and self._less(left, smallest):
+                    smallest = left
+                if right < n and self._less(right, smallest):
+                    smallest = right
+                if smallest == i:
+                    break  # heap order is restored
+                self._a[i], self._a[smallest] = self._a[smallest], self._a[i]
+                i = smallest
+
+        priority, _, item = top
+        return (priority, item)
 
 
 # =====================================================================
